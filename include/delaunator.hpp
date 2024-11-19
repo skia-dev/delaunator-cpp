@@ -10,6 +10,7 @@
 #include <vector>
 
 #define assertm(exp, msg) assert(((void)msg, exp))
+#define fail(msg) assertm(msg, false)
 
 namespace delaunator {
 
@@ -290,7 +291,7 @@ inline Delaunator::Delaunator(std::vector<double> const& in_coords)
     }
 
     if (!(min_radius < std::numeric_limits<double>::max())) {
-        //throw std::runtime_error("not triangulation");
+        fail("not triangulation");
     }
 
     double i2x = coords[2 * i2];
@@ -318,8 +319,6 @@ inline Delaunator::Delaunator(std::vector<double> const& in_coords)
     hull_tri.resize(n);
 
     hull_start = i0;
-
-    // size_t hull_size = 3;
 
     hull_next[i0] = hull_prev[i2] = i1;
     hull_next[i1] = hull_prev[i0] = i2;
@@ -389,7 +388,6 @@ inline Delaunator::Delaunator(std::vector<double> const& in_coords)
 
         hull_tri[i] = legalize(t + 2);
         hull_tri[e] = t;
-        // hull_size++;
 
         // walk forward through the hull, adding more triangles and flipping recursively
         std::size_t next = hull_next[e];
@@ -399,7 +397,6 @@ inline Delaunator::Delaunator(std::vector<double> const& in_coords)
             t = add_triangle(next, i, q, hull_tri[i], INVALID_INDEX, hull_tri[next]);
             hull_tri[i] = legalize(t + 2);
             hull_next[next] = next; // mark as removed
-            // hull_size--;
             next = q;
         }
 
@@ -412,7 +409,6 @@ inline Delaunator::Delaunator(std::vector<double> const& in_coords)
                 legalize(t + 2);
                 hull_tri[q] = t;
                 hull_next[e] = e; // mark as removed
-                // hull_size--;
                 e = q;
             }
         }
@@ -570,7 +566,7 @@ inline void Delaunator::link(const std::size_t a, const std::size_t b) {
     } else if (a < s) {
         halfedges[a] = b;
     } else {
-        assertm(false, "Cannot link edge");
+        fail("Cannot link edge");
     }
     if (b != INVALID_INDEX) {
         std::size_t s2 = halfedges.size();
@@ -579,7 +575,7 @@ inline void Delaunator::link(const std::size_t a, const std::size_t b) {
         } else if (b < s2) {
             halfedges[b] = a;
         } else {
-            assertm(false, "Cannot link edge");
+            fail("Cannot link edge");
         }
     }
 }
