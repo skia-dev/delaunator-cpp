@@ -1,13 +1,15 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
-#include <exception>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
+
+#define assertm(exp, msg) assert(((void)msg, exp))
 
 namespace delaunator {
 
@@ -204,7 +206,7 @@ private:
     void link(std::size_t a, std::size_t b);
 };
 
-Delaunator::Delaunator(std::vector<double> const& in_coords)
+inline Delaunator::Delaunator(std::vector<double> const& in_coords)
     : coords(in_coords),
       triangles(),
       halfedges(),
@@ -288,7 +290,7 @@ Delaunator::Delaunator(std::vector<double> const& in_coords)
     }
 
     if (!(min_radius < std::numeric_limits<double>::max())) {
-        throw std::runtime_error("not triangulation");
+        //throw std::runtime_error("not triangulation");
     }
 
     double i2x = coords[2 * i2];
@@ -317,7 +319,7 @@ Delaunator::Delaunator(std::vector<double> const& in_coords)
 
     hull_start = i0;
 
-    size_t hull_size = 3;
+    // size_t hull_size = 3;
 
     hull_next[i0] = hull_prev[i2] = i1;
     hull_next[i1] = hull_prev[i0] = i2;
@@ -366,7 +368,7 @@ Delaunator::Delaunator(std::vector<double> const& in_coords)
         size_t e = start;
         size_t q;
 
-        while (q = hull_next[e], !orient(x, y, coords[2 * e], coords[2 * e + 1], coords[2 * q], coords[2 * q + 1])) { //TODO: does it works in a same way as in JS
+        while ((void)(q = hull_next[e]), !orient(x, y, coords[2 * e], coords[2 * e + 1], coords[2 * q], coords[2 * q + 1])) { //TODO: does it works in a same way as in JS
             e = q;
             if (e == start) {
                 e = INVALID_INDEX;
@@ -387,30 +389,30 @@ Delaunator::Delaunator(std::vector<double> const& in_coords)
 
         hull_tri[i] = legalize(t + 2);
         hull_tri[e] = t;
-        hull_size++;
+        // hull_size++;
 
         // walk forward through the hull, adding more triangles and flipping recursively
         std::size_t next = hull_next[e];
         while (
-            q = hull_next[next],
+            (void)(q = hull_next[next]),
             orient(x, y, coords[2 * next], coords[2 * next + 1], coords[2 * q], coords[2 * q + 1])) {
             t = add_triangle(next, i, q, hull_tri[i], INVALID_INDEX, hull_tri[next]);
             hull_tri[i] = legalize(t + 2);
             hull_next[next] = next; // mark as removed
-            hull_size--;
+            // hull_size--;
             next = q;
         }
 
         // walk backward from the other side, adding more triangles and flipping
         if (e == start) {
             while (
-                q = hull_prev[e],
+                (void)(q = hull_prev[e]),
                 orient(x, y, coords[2 * q], coords[2 * q + 1], coords[2 * e], coords[2 * e + 1])) {
                 t = add_triangle(q, i, e, INVALID_INDEX, hull_tri[e], hull_tri[q]);
                 legalize(t + 2);
                 hull_tri[q] = t;
                 hull_next[e] = e; // mark as removed
-                hull_size--;
+                // hull_size--;
                 e = q;
             }
         }
@@ -427,7 +429,7 @@ Delaunator::Delaunator(std::vector<double> const& in_coords)
     }
 }
 
-double Delaunator::get_hull_area() {
+inline double Delaunator::get_hull_area() {
     std::vector<double> hull_area;
     size_t e = hull_start;
     do {
@@ -437,7 +439,7 @@ double Delaunator::get_hull_area() {
     return sum(hull_area);
 }
 
-std::size_t Delaunator::legalize(std::size_t a) {
+inline std::size_t Delaunator::legalize(std::size_t a) {
     std::size_t i = 0;
     std::size_t ar = 0;
     m_edge_stack.clear();
@@ -544,7 +546,7 @@ inline std::size_t Delaunator::hash_key(const double x, const double y) const {
         m_hash_size);
 }
 
-std::size_t Delaunator::add_triangle(
+inline std::size_t Delaunator::add_triangle(
     std::size_t i0,
     std::size_t i1,
     std::size_t i2,
@@ -561,14 +563,14 @@ std::size_t Delaunator::add_triangle(
     return t;
 }
 
-void Delaunator::link(const std::size_t a, const std::size_t b) {
+inline void Delaunator::link(const std::size_t a, const std::size_t b) {
     std::size_t s = halfedges.size();
     if (a == s) {
         halfedges.push_back(b);
     } else if (a < s) {
         halfedges[a] = b;
     } else {
-        throw std::runtime_error("Cannot link edge");
+        assertm(false, "Cannot link edge");
     }
     if (b != INVALID_INDEX) {
         std::size_t s2 = halfedges.size();
@@ -577,7 +579,7 @@ void Delaunator::link(const std::size_t a, const std::size_t b) {
         } else if (b < s2) {
             halfedges[b] = a;
         } else {
-            throw std::runtime_error("Cannot link edge");
+            assertm(false, "Cannot link edge");
         }
     }
 }
